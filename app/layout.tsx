@@ -13,9 +13,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://inpact.app"),
   title: "InPact | Fitness Accountability",
   description:
     "InPact is the fitness app that helps friends stay accountable, build discipline and achieve their goals together.",
+  openGraph: {
+    title: "InPact | Never Break The Pact",
+    description: "Train together. Stay accountable. Never Break The Pact.",
+    images: ["/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "InPact | Never Break The Pact",
+    description: "Train together. Stay accountable. Never Break The Pact.",
+    images: ["/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({
