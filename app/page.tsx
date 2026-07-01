@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 
 type IconProps = {
   className?: string;
@@ -173,73 +173,7 @@ function StoreBadge({
 }
 
 export default function Home() {
-  const [scrollY, setScrollY] = useState(0);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [visible, setVisible] = useState<Record<string, boolean>>({});
-  const [visibleHowCards, setVisibleHowCards] = useState<Record<number, boolean>>({});
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      setScrollY(y);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    const observed = document.querySelectorAll<HTMLElement>("[data-reveal]");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.getAttribute("data-reveal");
-            if (id) {
-              setVisible((prev) => ({ ...prev, [id]: true }));
-            }
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.18 },
-    );
-
-    observed.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    if (!isMobile) {
-      return;
-    }
-
-    const cards = document.querySelectorAll<HTMLElement>("[data-how-card]");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const indexAttr = entry.target.getAttribute("data-how-index");
-            const index = Number(indexAttr);
-
-            if (!Number.isNaN(index)) {
-              setVisibleHowCards((prev) => ({ ...prev, [index]: true }));
-            }
-
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.25 },
-    );
-
-    cards.forEach((card) => observer.observe(card));
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -252,36 +186,6 @@ export default function Home() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const heroTiltStyle = useMemo(
-    () => ({
-      transform: `perspective(1200px) translateY(${Math.min(scrollY * 0.06, 22)}px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-    }),
-    [tilt, scrollY],
-  );
-
-  const onHeroMove: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const relX = (event.clientX - bounds.left) / bounds.width;
-    const relY = (event.clientY - bounds.top) / bounds.height;
-    const rotateY = (relX - 0.5) * 4;
-    const rotateX = (0.5 - relY) * 3;
-    setTilt({ x: rotateX, y: rotateY });
-  };
-
-  const onMagneticMove: React.MouseEventHandler<HTMLElement> = (event) => {
-    const el = event.currentTarget;
-    const rect = el.getBoundingClientRect();
-    const x = event.clientX - rect.left - rect.width / 2;
-    const y = event.clientY - rect.top - rect.height / 2;
-    el.style.setProperty("--mx", `${x * 0.11}px`);
-    el.style.setProperty("--my", `${y * 0.16}px`);
-  };
-
-  const onMagneticLeave: React.MouseEventHandler<HTMLElement> = (event) => {
-    const el = event.currentTarget;
-    el.style.setProperty("--mx", "0px");
-    el.style.setProperty("--my", "0px");
-  };
 
   const onDownloadClick: React.MouseEventHandler<HTMLAnchorElement> = (event) => {
     event.preventDefault();
@@ -320,9 +224,7 @@ export default function Home() {
 
           <a
             href="#"
-            className="btn-micro magnetic rounded-xl border border-black px-4 py-2 text-xs font-semibold transition-colors hover:bg-black hover:text-white md:text-sm"
-            onMouseMove={onMagneticMove}
-            onMouseLeave={onMagneticLeave}
+            className="btn-micro rounded-xl border border-black px-4 py-2 text-xs font-semibold transition-colors hover:bg-black hover:text-white md:text-sm"
             onClick={onDownloadClick}
           >
             Download the App
@@ -331,21 +233,11 @@ export default function Home() {
       </nav>
 
       <main id="top" className="overflow-x-hidden pt-18">
-        <section data-reveal="hero" className={`reveal px-5 py-16 md:px-8 md:py-24 ${visible.hero ? "reveal-visible" : ""}`}>
+        <section className="px-5 py-16 md:px-8 md:py-24">
           <div className="mx-auto grid max-w-[1200px] items-center gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
-            <div className="animate-fade-up">
-              <div
-                className="hero-copy-parallax"
-                style={
-                  {
-                    ["--hero-title" as const]: `${Math.min(scrollY * 0.075, 26)}px`,
-                    ["--hero-body" as const]: `${Math.min(scrollY * 0.055, 20)}px`,
-                    ["--hero-actions" as const]: `${Math.min(scrollY * 0.038, 14)}px`,
-                    ["--hero-stores" as const]: `${Math.min(scrollY * 0.03, 12)}px`,
-                  } as CSSProperties
-                }
-              >
-                <h1 className="hero-layer-title text-[clamp(2.8rem,8vw,5.2rem)] leading-[0.92] font-black tracking-[-0.04em] uppercase">
+            <div>
+              <div>
+                <h1 className="text-[clamp(2.8rem,8vw,5.2rem)] leading-[0.92] font-black tracking-[-0.04em] uppercase">
                   DON&apos;T
                   <br />
                   BREAK
@@ -353,25 +245,23 @@ export default function Home() {
                   THE PACT.
                 </h1>
 
-                <p className="hero-layer-body mt-7 max-w-xl text-base leading-relaxed text-black/75 md:text-[1.08rem]">
+                <p className="mt-7 max-w-xl text-base leading-relaxed text-black/75 md:text-[1.08rem]">
                   InPact is the fitness app that keeps you and your friends accountable.
                   {" "}
                   Create a pact, track every workout, stay consistent, and achieve your goals together.
                 </p>
 
-                <div className="hero-layer-actions mt-8 flex flex-wrap gap-3">
+                <div className="mt-8 flex flex-wrap gap-3">
                   <a
                     href="#"
-                    className="btn-micro magnetic inline-flex items-center gap-2 rounded-xl border border-black bg-black px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-85"
-                    onMouseMove={onMagneticMove}
-                    onMouseLeave={onMagneticLeave}
+                    className="btn-micro inline-flex items-center gap-2 rounded-xl border border-black bg-black px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-85"
                     onClick={onDownloadClick}
                   >
                     Download the App
                   </a>
                 </div>
 
-                <div className="hero-layer-stores mt-7">
+                <div className="mt-7">
                   <p className="text-xs font-medium tracking-[0.16em] text-black/55 uppercase">Coming Soon To</p>
                   <div className="mt-3 flex flex-wrap gap-3">
                     <StoreBadge platform="apple" subtitle="Download on the" />
@@ -381,13 +271,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div
-              className="animate-fade-up delay-150 relative flex justify-center lg:justify-end"
-              onMouseMove={onHeroMove}
-              onMouseLeave={() => setTilt({ x: 0, y: 0 })}
-            >
-              <div className="hero-glow" />
-              <div className="hero-phone float-phone transition-transform duration-200" style={heroTiltStyle}>
+            <div className="relative flex justify-center lg:justify-end">
+              <div className="hero-phone">
                 <Image
                   src="/assets/double-phone-main.png"
                   alt="Double Phone Main"
@@ -404,19 +289,15 @@ export default function Home() {
 
         <section
           id="how-it-works"
-          data-reveal="how"
-          className={`reveal bg-black px-5 py-16 text-white md:px-8 md:py-24 ${visible.how ? "reveal-visible" : ""}`}
+          className="bg-black px-5 py-16 text-white md:px-8 md:py-24"
         >
           <div className="mx-auto max-w-[1200px]">
             <h2 className="text-center text-[1.95rem] font-black tracking-tight uppercase">How it works</h2>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {howItWorks.map((item, index) => (
+              {howItWorks.map((item) => (
                 <article
                   key={item.title}
-                  data-how-card
-                  data-how-index={index}
-                  className={`how-card how-scroll-card ${index % 2 === 0 ? "how-from-left" : "how-from-right"} ${visibleHowCards[index] ? "how-card-visible" : ""} rounded-2xl border border-white/18 px-5 py-6`}
-                  style={{ ["--how-delay" as const]: `${index * 0.1}s` } as CSSProperties}
+                  className="how-card rounded-2xl border border-white/18 px-5 py-6"
                 >
                   <div className="icon-shell inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/22 text-lg">
                     <item.icon className="h-5 w-5 text-white" />
@@ -432,8 +313,7 @@ export default function Home() {
 
         <section
           id="features"
-          data-reveal="features"
-          className={`reveal px-5 py-16 md:px-8 md:py-24 ${visible.features ? "reveal-visible" : ""}`}
+          className="px-5 py-16 md:px-8 md:py-24"
         >
           <div className="mx-auto max-w-[1200px]">
             <h2 className="text-center text-[clamp(2.2rem,5.2vw,3.4rem)] leading-[0.96] font-black tracking-[-0.03em] uppercase">
@@ -443,11 +323,10 @@ export default function Home() {
             </h2>
 
             <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature, index) => (
+              {features.map((feature) => (
                 <article
                   key={feature.title}
-                  className="feature-card animate-fade-up rounded-2xl border border-black/12 px-6 py-7 transition-transform duration-300"
-                  style={{ animationDelay: `${index * 55}ms` }}
+                  className="feature-card rounded-2xl border border-black/12 px-6 py-7"
                 >
                   <h3 className="text-base font-bold uppercase">{feature.title}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-black/66">{feature.description}</p>
@@ -459,8 +338,7 @@ export default function Home() {
 
         <section
           id="screenshots"
-          data-reveal="shots"
-          className={`reveal bg-black px-5 py-16 text-white md:px-8 md:py-24 ${visible.shots ? "reveal-visible" : ""}`}
+          className="bg-black px-5 py-16 text-white md:px-8 md:py-24"
         >
           <div className="mx-auto max-w-[1200px]">
             <h2 className="text-center text-[clamp(2rem,4.8vw,3.2rem)] leading-[0.96] font-black tracking-[-0.03em] uppercase">
@@ -470,16 +348,10 @@ export default function Home() {
             </h2>
 
             <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {screenshots.map((item, index) => (
+              {screenshots.map((item) => (
                 <article
                   key={item.title}
-                  className="shot-card animate-fade-up rounded-2xl border border-white/18 px-4 py-5"
-                  style={
-                    {
-                      animationDelay: `${index * 70}ms`,
-                      ["--shot-parallax" as const]: `${Math.min(scrollY * 0.012, 12)}px`,
-                    } as CSSProperties
-                  }
+                  className="shot-card rounded-2xl border border-white/18 px-4 py-5"
                 >
                   <div className="shot-image mx-auto max-w-[220px]">
                     <Image
@@ -499,9 +371,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="cta" data-reveal="cta" className={`reveal px-5 py-20 md:px-8 md:py-32 ${visible.cta ? "reveal-visible" : ""}`}>
+        <section id="cta" className="px-5 py-20 md:px-8 md:py-32">
           <div className="mx-auto max-w-[1200px]">
-            <div className="animate-fade-up rounded-2xl border border-black/20 px-7 py-10 md:px-12 md:py-14">
+            <div className="rounded-2xl border border-black/20 px-7 py-10 md:px-12 md:py-14">
               <div className="grid items-center gap-8 md:grid-cols-[1fr_auto]">
                 <div>
                   <h2 className="text-[clamp(2rem,5vw,3.8rem)] leading-[0.94] font-black tracking-[-0.03em] uppercase">
@@ -516,9 +388,7 @@ export default function Home() {
 
                 <a
                   href="#"
-                  className="btn-micro magnetic inline-flex h-13 items-center justify-center rounded-xl border border-black bg-black px-8 text-sm font-semibold text-white transition-opacity hover:opacity-85"
-                  onMouseMove={onMagneticMove}
-                  onMouseLeave={onMagneticLeave}
+                  className="btn-micro inline-flex h-13 items-center justify-center rounded-xl border border-black bg-black px-8 text-sm font-semibold text-white transition-opacity hover:opacity-85"
                   onClick={onDownloadClick}
                 >
                   Download the App
@@ -529,7 +399,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer id="faq" data-reveal="footer" className={`reveal bg-black px-5 py-12 text-white md:px-8 ${visible.footer ? "reveal-visible" : ""}`}>
+      <footer id="faq" className="bg-black px-5 py-12 text-white md:px-8">
         <div className="mx-auto grid max-w-[1200px] gap-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
             <Image
