@@ -186,3 +186,27 @@ html {
   transform: translateY(var(--shot-parallax, 0px)) scale(1.2);
   filter: drop-shadow(0 24px 42px rgba(0, 0, 0, 0.48));
 }
+
+@media (max-width: 768px) {
+  .how-scroll-card {
+    opacity: 0;
+    transform: translateX(var(--how-offset, 0px));
+    transition:
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--how-delay, 0s);
+  }
+
+  .how-from-left {
+    --how-offset: -120px;
+  }
+
+  .how-from-right {
+    --how-offset: 120px;
+  }
+
+  .how-scroll-card.how-card-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

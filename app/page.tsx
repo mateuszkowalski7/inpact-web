@@ -176,6 +176,7 @@ export default function Home() {
   const [scrollY, setScrollY] = useState(0);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [visible, setVisible] = useState<Record<string, boolean>>({});
+  const [visibleHowCards, setVisibleHowCards] = useState<Record<number, boolean>>({});
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
 
   useEffect(() => {
@@ -206,6 +207,36 @@ export default function Home() {
     );
 
     observed.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    if (!isMobile) {
+      return;
+    }
+
+    const cards = document.querySelectorAll<HTMLElement>("[data-how-card]");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const indexAttr = entry.target.getAttribute("data-how-index");
+            const index = Number(indexAttr);
+
+            if (!Number.isNaN(index)) {
+              setVisibleHowCards((prev) => ({ ...prev, [index]: true }));
+            }
+
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.25 },
+    );
+
+    cards.forEach((card) => observer.observe(card));
 
     return () => observer.disconnect();
   }, []);
@@ -258,7 +289,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-white text-black">
+    <div className="overflow-x-hidden bg-white text-black">
       <nav className="fixed top-0 left-0 z-50 w-full border-b border-black/10 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.06)]">
         <div className="mx-auto flex h-18 w-full max-w-[1200px] items-center justify-between px-5 md:px-8">
           <a href="#top" aria-label="InPact home" className="transition-opacity hover:opacity-75">
@@ -299,7 +330,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <main id="top" className="pt-18">
+      <main id="top" className="overflow-x-hidden pt-18">
         <section data-reveal="hero" className={`reveal px-5 py-16 md:px-8 md:py-24 ${visible.hero ? "reveal-visible" : ""}`}>
           <div className="mx-auto grid max-w-[1200px] items-center gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
             <div className="animate-fade-up">
@@ -382,8 +413,10 @@ export default function Home() {
               {howItWorks.map((item, index) => (
                 <article
                   key={item.title}
-                  className="how-card animate-fade-up rounded-2xl border border-white/18 px-5 py-6"
-                  style={{ animationDelay: `${index * 70}ms` }}
+                  data-how-card
+                  data-how-index={index}
+                  className={`how-card how-scroll-card ${index % 2 === 0 ? "how-from-left" : "how-from-right"} ${visibleHowCards[index] ? "how-card-visible" : ""} rounded-2xl border border-white/18 px-5 py-6`}
+                  style={{ ["--how-delay" as const]: `${index * 0.1}s` } as CSSProperties}
                 >
                   <div className="icon-shell inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/22 text-lg">
                     <item.icon className="h-5 w-5 text-white" />
